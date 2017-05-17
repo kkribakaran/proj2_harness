@@ -23,7 +23,6 @@ PCB::PCB(int pid, int parentPID) : openFilesBitMap(MAX_NUM_FILES_OPEN) {
     // Child process should inherit the file descriptors openned in the parent process
     // Implement me
     
-   
 }
 
 //-----------------------------------------------------------------------------
@@ -51,7 +50,6 @@ int PCB::getPID() {
 //-----------------------------------------------------------------------------
 
 int PCB::addFile(UserOpenFile file) {
-
     int fileIndex = openFilesBitMap.Find();
     if (fileIndex == -1) {
         printf("No more room for open files.\n");

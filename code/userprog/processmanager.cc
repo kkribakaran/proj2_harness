@@ -85,7 +85,6 @@ void ProcessManager::addProcess(PCB* pcb, int pid) {
 //-----------------------------------------------------------------------------
 
 void ProcessManager::join(int pid) {
-
     Lock* lockForOtherProcess = lockList[pid];
     if (lockForOtherProcess == NULL) {
         lockForOtherProcess = new Lock("");
@@ -97,10 +96,16 @@ void ProcessManager::join(int pid) {
         conditionForOtherProcess = new Condition("");
         conditionList[pid] = conditionForOtherProcess;
     }
+    //
+    processesWaitingOnPID[pid]++;
+    while (processesWaitingOnPID[pid] > 0) {
+      conditionForOtherProcesses.wait(lockForOtherProcess);
+    }
+    clearPID(pid); //?
+    //
    // Increment  processesWaitingOnPID[pid].
    // Conditional waiting on when it becomes 0. When it bcomes 0, recycle pid.
    // Implement me. 
-
 }
 
 //-----------------------------------------------------------------------------
@@ -110,12 +115,12 @@ void ProcessManager::join(int pid) {
 //-----------------------------------------------------------------------------
 
 void ProcessManager::broadcast(int pid) {
-
     Lock* lock = lockList[pid];
     Condition* condition = conditionList[pid];
     pcbStatuses[pid] = pcbList[pid]->status;
 
     if (condition != NULL) { // something is waiting on this process
+      condition.broadcast(lock);
 	// Wake up others 
 	// Implement me
     }

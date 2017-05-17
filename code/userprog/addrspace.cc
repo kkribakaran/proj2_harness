@@ -158,14 +158,31 @@ AddrSpace::AddrSpace(const AddrSpace* other, PCB* pcb) {
 
         this->pcb = pcb;
         pageTable = new TranslationEntry[numPages];
+        //
+        TranslationEntry[] otherPageTable = other->pageTable;
+        //
 	//Allocate physical pages for each page in the new process under pcb
 	//Implement me
+	//NOT SURE
+	for (i = 0; i < numPages; i++) {
+            pageTable[i].virtualPage = otherPageTable[i].virtualPage;
+            pageTable[i].physicalPage = otherPageTable[i].physicalPage;
+            pageTable[i].valid = otherPageTable[i].valid; 
+            pageTable[i].use = otherPageTable[i].use;
+            pageTable[i].dirty = otherPageTable[i].dirty;
+            pageTable[i].readOnly = otherPageTable[i].readOnly;
+        }
+        //
         memoryManager->lock->Release();
 
         machineLock->Acquire();
+  
 	//Copy page content of the other process to the new address space page by page
         //Implement me
-        
+        for (i = 0; i < numPages; i++) {
+            int physAddr = pageTable[i].physicalPage * PageSize;
+        }
+
         machineLock->Release();
     }
     else {// Cannot fit into the current available memory
@@ -237,7 +254,8 @@ AddrSpace::InitRegisters()
 //----------------------------------------------------------------------
 
 void AddrSpace::SaveState() 
-{}
+{  
+}
 
 //----------------------------------------------------------------------
 // AddrSpace::RestoreState

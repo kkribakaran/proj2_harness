@@ -15,6 +15,7 @@
 
 #include "copyright.h"
 #include "filesys.h"
+#include "pcb.h"
 
 #define UserStackSize 1024              // increase this as necessary!
 
@@ -37,6 +38,8 @@ public:
 
 private:
     TranslationEntry *pageTable;	    // Assume linear page table translation
+    //registers
+    //
                                         // for now!
     unsigned int numPages;		        // Number of pages in the virtual
                                         // address space
