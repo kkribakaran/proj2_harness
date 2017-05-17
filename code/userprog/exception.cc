@@ -170,11 +170,12 @@ int forkImpl() {
     int newProcessPC = machine->ReadRegister(4);
 
     // Find a new PID, and then construct new PCB. 
-    int currPID = currentThread->space->getPCB()->getPID();
+   /* int currPID = currentThread->space->getPCB()->getPID();
     int newPID = processManager->getPID();
     PCB* pcb = new PCB(newPID, currPID);
     pcb->status = P_RUNNING;
     pcb->process = newThread;
+*/
         
 
    // Implement me
