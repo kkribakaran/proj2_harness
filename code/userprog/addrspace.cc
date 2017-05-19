@@ -68,6 +68,7 @@ AddrSpace::AddrSpace(OpenFile *executable, PCB* pcb)
     unsigned int i, size;
     int read;
 
+    //makes sure executable si MIPS readable
     executable->ReadAt((char *)&noffH, sizeof(noffH), 0);
     if ((noffH.noffMagic != NOFFMAGIC) && 
     (WordToHost(noffH.noffMagic) == NOFFMAGIC))
@@ -165,8 +166,8 @@ AddrSpace::AddrSpace(const AddrSpace* other, PCB* pcb) {
 	//Implement me
 	//NOT SURE
 	for (i = 0; i < numPages; i++) {
-            pageTable[i].virtualPage = otherPageTable[i].virtualPage;
-            pageTable[i].physicalPage = otherPageTable[i].physicalPage;
+            pageTable[i].virtualPage = i;
+            pageTable[i].physicalPage = memoryManager->getPage();
             pageTable[i].valid = otherPageTable[i].valid; 
             pageTable[i].use = otherPageTable[i].use;
             pageTable[i].dirty = otherPageTable[i].dirty;
@@ -174,16 +175,13 @@ AddrSpace::AddrSpace(const AddrSpace* other, PCB* pcb) {
         }
         //
         memoryManager->lock->Release();
-
-        machineLock->Acquire();
   
 	//Copy page content of the other process to the new address space page by page
         //Implement me
-        for (i = 0; i < numPages; i++) {
-            int physAddr = pageTable[i].physicalPage * PageSize;
+        if (other->numPages > 0) {
+            int size = other->numPages * PageSize;
+            copy = CopyAddrSpace(size, other);
         }
-
-        machineLock->Release();
     }
     else {// Cannot fit into the current available memory
         memoryManager->lock->Release();
@@ -296,11 +294,58 @@ int AddrSpace::Translate(int virtualAddress) {
     return physicalAddress;
 }
 
+int AddrSpace::Translate(int virtualAddress, const AddrSpace* other) {
+
+    int pageTableIndex = virtualAddress / PageSize;
+    int offset = virtualAddress % PageSize;
+    int physicalAddress = 0;
+
+    if (virtualAddress < 0 || pageTableIndex > other->numPages) {
+        physicalAddress = -1;
+    } else {
+        physicalAddress = 
+            other->pageTable[pageTableIndex].physicalPage * PageSize + offset;
+    }
+
+    return physicalAddress;
+}
+
 //----------------------------------------------------------------------
 // AddrSpace::ReadFile
 //     
 //     Loads the code and data segments into the translated memory.
 //----------------------------------------------------------------------
+int AddrSpace::CopyAddrSpace(int size, const AddrSpace* other) {
+    int numBytesRead = 0;
+    int physToAddr = 0;
+    int physFromAddr = 0;
+    int currVirtFromAddr = 0;
+    int currVirtToAddr = 0;
+
+    while (numBytesRead < size) {
+
+        physToAddr = Translate(currVirtToAddr);
+        physFromAddr = Translate(currVirtFromAddr, other); 
+
+        if (physToAddr != -1 && physFromAddr != -1) { // zero the dest bytes, then copy over
+            
+            machineLock->Acquire();
+            bzero(&(machine->mainMemory)[physToAddr], PageSize);
+            bcopy(&((machine->mainMemory)[physFromAddr]), &((machine->mainMemory)[physToAddr]),
+                PageSize);
+            machineLock->Release();
+
+            currVirtFromAddr += PageSize;
+            currVirtToAddr += PageSize;
+
+            numBytesRead += PageSize;
+        } 
+        else {
+            return -1;
+        }
+    }
+    return 0;
+}
 
 int AddrSpace::ReadFile(int virtAddr, OpenFile* file, int size, int fileAddr) {
 

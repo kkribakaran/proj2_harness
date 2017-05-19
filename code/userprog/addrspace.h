@@ -34,9 +34,13 @@ public:
     void RestoreState();		        // info on a context switch
 
     int Translate(int virtualAddr);     // Return the physical memory address
+    static int Translate(int virtualAddr, const AddrSpace* other);
+    int ReadFile(int virtAddr, OpenFile* file, int size, int fileAddr);
+    int CopyAddrSpace(int size, const AddrSpace* other);
                                         // mapped by a virtual address
 
 private:
+    
     TranslationEntry *pageTable;	    // Assume linear page table translation
     //registers
     //
