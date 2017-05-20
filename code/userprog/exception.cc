@@ -170,15 +170,19 @@ int forkImpl() {
     int newProcessPC = machine->ReadRegister(4);
 
     // Find a new PID, and then construct new PCB. 
+    // Implement me
     int currPID = currentThread->space->getPCB()->getPID();
     int newPID = processManager->getPID();
     PCB* pcb = new PCB(newPID, currPID);
     pcb->status = P_RUNNING;
     pcb->process = newThread;
-   // Implement me
 
     // Make a copy of the address space as the child space, save its registers
    // Implement me
+    AddrSpace* asCopy = new AddressSpace(currentThread->space, currentThread->space->getPCB());
+    childThread->space = asCopy;
+    
+    
 
     // Mandatory printout of the forked process
     PCB* parentPCB = currentThread->space->getPCB();

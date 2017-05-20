@@ -22,22 +22,26 @@
 class AddrSpace {
 
 public:
-    AddrSpace(OpenFile *executable, PCB* pcb);	// Create an address space,
+    AddrSpace(const AddrSpace* other, PCB* pcb_);
+    AddrSpace(OpenFile *executable, PCB* pcb_);	// Create an address space,
                                         // initializing it with the program
                                         // stored in the file "executable"
     ~AddrSpace();			            // De-allocate an address space
+    PCB* pcb;
 
     void InitRegisters();               // Initialize user-level CPU registers,
                                         // before jumping to user code
 
     void SaveState();			        // Save/restore address space-specific
     void RestoreState();		        // info on a context switch
+    PCB* getPCB();
 
     int Translate(int virtualAddr);     // Return the physical memory address
     static int Translate(int virtualAddr, const AddrSpace* other);
     int ReadFile(int virtAddr, OpenFile* file, int size, int fileAddr);
     int CopyAddrSpace(int size, const AddrSpace* other);
                                         // mapped by a virtual address
+    bool isValid();
 
 private:
     

@@ -23,8 +23,10 @@ public:
     MemoryManager();
     ~MemoryManager();
 
-    int allocFrame();           // allocate a free frame to a process
-    void freeFrame(int frame);  // free an allocated frame
+    int getPage();           // allocate a free frame to a process
+    void clearPage(int frame);  // free an allocated frame
+    int getNumFreePages();
+    Lock* lock;
 
 private:
     BitMap *frames;             // Use a bitmap to keep track of memory usage

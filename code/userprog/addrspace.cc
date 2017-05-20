@@ -62,11 +62,11 @@ SwapHeader (NoffHeader *noffH)
 //  "executable" is the file containing the object code to load into memory
 //----------------------------------------------------------------------
 
-AddrSpace::AddrSpace(OpenFile *executable, PCB* pcb)
+AddrSpace::AddrSpace(OpenFile *executable, PCB* pcb_)
 {
     NoffHeader noffH;
     unsigned int i, size;
-    int read;
+    //int read;
 
     //makes sure executable si MIPS readable
     executable->ReadAt((char *)&noffH, sizeof(noffH), 0);
@@ -91,9 +91,9 @@ AddrSpace::AddrSpace(OpenFile *executable, PCB* pcb)
     DEBUG('a', "Initializing address space, num pages %d, size %d\n", 
           numPages, size);
 
-    if (numPages <= memoryManager->getNumFreePages()) {
+    if ((int)numPages <= memoryManager->getNumFreePages()) {
 
-        this->pcb = pcb;
+        this->pcb = pcb_;
 
         // Set up the page table
         pageTable = new TranslationEntry[numPages];
@@ -123,13 +123,13 @@ AddrSpace::AddrSpace(OpenFile *executable, PCB* pcb)
         if (noffH.code.size > 0) {
             DEBUG('a', "Initializing code segment, at 0x%x, size %d\n", 
                 noffH.code.virtualAddr, noffH.code.size);
-            read = ReadFile(noffH.code.virtualAddr,executable,noffH.code.size,
+            ReadFile(noffH.code.virtualAddr,executable,noffH.code.size,
                 noffH.code.inFileAddr);
         }
         if (noffH.initData.size > 0) {
             DEBUG('a', "Initializing data segment, at 0x%x, size %d\n", 
                 noffH.initData.virtualAddr, noffH.initData.size);
-            read = ReadFile(noffH.initData.virtualAddr,executable,
+            ReadFile(noffH.initData.virtualAddr,executable,
                 noffH.initData.size,noffH.initData.inFileAddr);
         }
     }
@@ -137,7 +137,7 @@ AddrSpace::AddrSpace(OpenFile *executable, PCB* pcb)
     else { // Not enough free pages to acquire.
         memoryManager->lock->Release();
         pageTable = NULL;
-        pcb = new PCB(-1,-1);
+        this->pcb = new PCB(-1,-1);
     }
 }
 
@@ -146,7 +146,7 @@ AddrSpace::AddrSpace(OpenFile *executable, PCB* pcb)
 //     Copy constructor that makes an identical copy of "other" address space.
 //----------------------------------------------------------------------
 
-AddrSpace::AddrSpace(const AddrSpace* other, PCB* pcb) {
+AddrSpace::AddrSpace(const AddrSpace* other, PCB* pcb_) {
     
     ASSERT(other->numPages <= NumPhysPages);
 
@@ -155,16 +155,16 @@ AddrSpace::AddrSpace(const AddrSpace* other, PCB* pcb) {
     memoryManager->lock->Acquire();
     DEBUG('a', "Initializing address space with num pages: %d.\n", numPages);
 
-    if (numPages <= memoryManager->getNumFreePages()) {
+    if ((int)numPages <= memoryManager->getNumFreePages()) {
 
-        this->pcb = pcb;
+        this->pcb = pcb_;
         pageTable = new TranslationEntry[numPages];
         //
-        TranslationEntry[] otherPageTable = other->pageTable;
+        TranslationEntry* otherPageTable = other->pageTable;
         //
 	//Allocate physical pages for each page in the new process under pcb
 	//Implement me
-	//NOT SURE
+	unsigned int i;
 	for (i = 0; i < numPages; i++) {
             pageTable[i].virtualPage = i;
             pageTable[i].physicalPage = memoryManager->getPage();
@@ -180,13 +180,13 @@ AddrSpace::AddrSpace(const AddrSpace* other, PCB* pcb) {
         //Implement me
         if (other->numPages > 0) {
             int size = other->numPages * PageSize;
-            copy = CopyAddrSpace(size, other);
+            CopyAddrSpace(size, other);
         }
     }
     else {// Cannot fit into the current available memory
         memoryManager->lock->Release();
         pageTable = NULL;
-        pcb = new PCB(-1,-1);
+        this->pcb = new PCB(-1,-1);
     }
 
 }
@@ -200,7 +200,7 @@ AddrSpace::~AddrSpace()
 {
     if (isValid()) {
         memoryManager->lock->Acquire();
-        for (int i = 0; i < numPages; i++) { // free the pages
+        for (int i = 0; i < (int)numPages; i++) { // free the pages
             memoryManager->clearPage(pageTable[i].physicalPage);
         }
         memoryManager->lock->Release();
@@ -226,7 +226,7 @@ AddrSpace::InitRegisters()
 
     machineLock->Acquire();
     for (i = 0; i < NumTotalRegs; i++)
-  machine->WriteRegister(i, 0);
+    machine->WriteRegister(i, 0);
 
     // Initial program counter -- must be location of "Start"
     machine->WriteRegister(PCReg, 0); 
@@ -284,7 +284,7 @@ int AddrSpace::Translate(int virtualAddress) {
     int offset = virtualAddress % PageSize;
     int physicalAddress = 0;
 
-    if (virtualAddress < 0 || pageTableIndex > numPages) {
+    if (virtualAddress < 0 || pageTableIndex > (int)numPages) {
         physicalAddress = -1;
     } else {
         physicalAddress = 
@@ -300,7 +300,7 @@ int AddrSpace::Translate(int virtualAddress, const AddrSpace* other) {
     int offset = virtualAddress % PageSize;
     int physicalAddress = 0;
 
-    if (virtualAddress < 0 || pageTableIndex > other->numPages) {
+    if (virtualAddress < 0 || pageTableIndex > (int)other->numPages) {
         physicalAddress = -1;
     } else {
         physicalAddress = 

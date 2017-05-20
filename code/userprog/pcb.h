@@ -6,7 +6,9 @@
 #ifndef PCB_H
 #define PCB_H
 
-#include "system.h"
+//#include "system.h"
+#include "bitmap.h"
+#include "useropenfile.h"
 //#include "thread.h"
 
 class PCB {
@@ -17,8 +19,10 @@ public:
 
     int pid;            // Process ID
     int parentPid;      // Parent's Process ID
-    Thread *thread;     // Kernel thread that controls this process
+//    Thread *thread;     // Kernel thread that controls this process
     BitMap openFilesBitMap;
+    int getPID();
+    int addFile(UserOpenFile file);
 
 };
 

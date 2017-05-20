@@ -20,7 +20,12 @@ public:
     void freePid(int pid);  // Free an allocated PID
 
 private:
-    BitMap *pids;           // Table to keep track of PIDs
+    BitMap *processesBitMap;           // Table to keep track of PIDs
+    PCB** pcbList;
+    Condition** conditionList;
+    Lock** lockList;
+    AddrSpace** addrSpaceList;
+    int numAvailPIDs;
 
 };
 

@@ -14,6 +14,7 @@ MemoryManager::MemoryManager()
 {
     // Create a bitmap with one bit for each frame
     frames = new BitMap(NumPhysPages);
+    lock = new Lock("");
 }
 
 //----------------------------------------------------------------------
@@ -31,9 +32,10 @@ MemoryManager::~MemoryManager()
 //  Allocate a free frame of physical memory to be used by a process.
 //----------------------------------------------------------------------
 
-int MemoryManager::allocFrame()
+int MemoryManager::getPage()
 {
-    return 0;
+    int frameNum = frames.Find();
+    return frameNum;
 }
 
 //----------------------------------------------------------------------
@@ -42,6 +44,11 @@ int MemoryManager::allocFrame()
 //  another process.
 //----------------------------------------------------------------------
 
-void MemoryManager::freeFrame(int frame)
+void MemoryManager::clearPage(int frame)
 {
+    frames.Clear(frame);
 }
+
+int MemoryManager::getNumFreePages() {
+    return NumClear();
+} 
