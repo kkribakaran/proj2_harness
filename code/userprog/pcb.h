@@ -16,7 +16,9 @@ class PCB {
 public:
     PCB(int pid, int parentPid);
     ~PCB();
-
+    UserOpenFile* getFile(int fileID); //Returns the open file associated with this PCB with                                            //the specified fileID.
+    int status;           //idk what status is nor its type
+    Thread* process;       //*edit to be Thread instead of int(idk how?????)
     int pid;            // Process ID
     int parentPid;      // Parent's Process ID
 //    Thread *thread;     // Kernel thread that controls this process

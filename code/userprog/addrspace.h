@@ -42,7 +42,7 @@ public:
     int CopyAddrSpace(int size, const AddrSpace* other);
                                         // mapped by a virtual address
     bool isValid();
-
+    int getNumPages();
 private:
     
     TranslationEntry *pageTable;	    // Assume linear page table translation

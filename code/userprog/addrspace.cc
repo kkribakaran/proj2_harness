@@ -407,3 +407,10 @@ PCB* AddrSpace::getPCB() {
 bool AddrSpace::isValid() {
     return (pcb != NULL);
 }
+//----------------------------------------------------------------------
+//AddrSpace::getNumPages()
+//     returns number or pages in current process
+//---------------------------------------------------------------------
+int AddrSpace::getNumPages(){
+  return numPages;
+}

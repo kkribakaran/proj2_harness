@@ -15,10 +15,12 @@ class ProcessManager {
 public:
     ProcessManager();
     ~ProcessManager();
-
+    void addProcess(PCB* pcb, int pid); //add new prcoess to the list
+    void clearPID(int currPID);
     int allocPid();         // Allocate a new PID
     void freePid(int pid);  // Free an allocated PID
-
+    int getStatus(int pid); //get status still dont know type???
+    int getPID();           //get PID
 private:
     BitMap *processesBitMap;           // Table to keep track of PIDs
     PCB** pcbList;

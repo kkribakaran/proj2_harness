@@ -27,7 +27,8 @@
 #define MAX_FILENAME_LEN 128
 #define USER_READ 0 // passed as type for userReadWrite
 #define USER_WRITE 1 // passed as type for userReadWrite
-
+#define P_RUNNING 1
+#define P_BLOCKED 0
 void IncrementPC(void);
 int forkImpl(void);
 void copyStateBack(int forkPC);
@@ -174,12 +175,13 @@ int forkImpl() {
     int currPID = currentThread->space->getPCB()->getPID();
     int newPID = processManager->getPID();
     PCB* pcb = new PCB(newPID, currPID);
+    
     pcb->status = P_RUNNING;
-    pcb->process = newThread;
+    pcb->process = childThread;
 
     // Make a copy of the address space as the child space, save its registers
    // Implement me
-    AddrSpace* asCopy = new AddressSpace(currentThread->space, currentThread->space->getPCB());
+    AddrSpace* asCopy = new AddrSpace(currentThread->space, currentThread->space->getPCB());
     childThread->space = asCopy;
     
     
@@ -188,7 +190,7 @@ int forkImpl() {
     PCB* parentPCB = currentThread->space->getPCB();
     PCB* childPCB = childThread->space->getPCB();
     fprintf(stderr, "Process %d Fork: start at address 0x%x with %d pages memory\n",
-     	 currPID, newProcessPC, childNumPages);
+	    currPID, newProcessPC, childThread->space->getNumPages());
       
     // Set up the function for the that new process will run and yield
     childThread->Fork(copyStateBack, newProcessPC);
@@ -411,7 +413,7 @@ char* copyString(char* oldStr) {
 int openImpl(char* filename) {
     
     int index = 0;
-    SysOpenFile* currSysFile = openFileManager->getFile(filename, index);
+    SysOpenFile* currSysFile = openFileManager->getOpenFile(index);
 
     if (currSysFile == NULL) { // if no process currently has it open
         OpenFile* openFile = fileSystem->Open(filename);
@@ -426,7 +428,7 @@ int openImpl(char* filename) {
        // Setup this SysOpenFile data structure
    	// Implement me
        
-        index = openFileManager->addFile(currSysFile);
+        index = openFileManager->addOpenFile(currSysFile);
     }
     else { // the file is already open by another process
         currSysFile->numProcessesAccessing++;

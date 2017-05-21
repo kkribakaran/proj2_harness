@@ -9,6 +9,7 @@
 struct SysOpenFile {
     OpenFile* openFile; // This file's OpenFile object in fileSystem
     int fileId;         // This file's ID
+  int numProcessesAccessing; //??
     char *filename;     // This file's name
 };
 
