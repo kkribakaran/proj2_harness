@@ -1,31 +1,42 @@
-// pcb.h
-//  The process control block is a data structure used to keep track of a
-//	single user process. For now, each process has an ID, a parent and a
-//	pointer to its kernel thread.
+/*
+ * PCB header
+ *
+ * A process control block stores all the necessary information about a process.
+*/
 
 #ifndef PCB_H
 #define PCB_H
 
-//#include "system.h"
 #include "bitmap.h"
 #include "useropenfile.h"
-//#include "thread.h"
+
+// Process status
+#define P_GOOD    0;
+#define P_BAD     1;
+#define P_RUNNING 2;
+#define P_BLOCKED 3;
+
+#define MAX_NUM_FILES_OPEN 32
+
+class Thread;
 
 class PCB {
 
-public:
-    PCB(int pid, int parentPid);
-    ~PCB();
-    UserOpenFile* getFile(int fileID); //Returns the open file associated with this PCB with                                            //the specified fileID.
-    int status;           //idk what status is nor its type
-    Thread* process;       //*edit to be Thread instead of int(idk how?????)
-    int pid;            // Process ID
-    int parentPid;      // Parent's Process ID
-//    Thread *thread;     // Kernel thread that controls this process
-    BitMap openFilesBitMap;
-    int getPID();
-    int addFile(UserOpenFile file);
+    public:
+        PCB(int pid, int parentPID);
+        ~PCB();
+        int getPID();
+        int status;
+        Thread* process;
+        int addFile(UserOpenFile file);
+        UserOpenFile* getFile(int fileID);
+        void removeFile(int fileID);
 
+    private:
+        BitMap openFilesBitMap;
+        int pid;
+        int parentPID;
+        UserOpenFile userOpenFileList[MAX_NUM_FILES_OPEN];
 };
 
 #endif // PCB_H

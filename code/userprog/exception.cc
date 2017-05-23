@@ -27,8 +27,6 @@
 #define MAX_FILENAME_LEN 128
 #define USER_READ 0 // passed as type for userReadWrite
 #define USER_WRITE 1 // passed as type for userReadWrite
-#define P_RUNNING 1
-#define P_BLOCKED 0
 void IncrementPC(void);
 int forkImpl(void);
 void copyStateBack(int forkPC);
@@ -74,9 +72,11 @@ void ExceptionHandler(ExceptionType which)
     int newProcessPID = 0;
     int otherProcessStatus = 0;
     int result = 0;
+/*
     int arg1 = 0;
     int arg2 = 0;
     int arg3 = 0;
+*/
     char* filename = new char[MAX_FILENAME_LEN];
 
     int type = machine->ReadRegister(2);
@@ -253,8 +253,10 @@ void exitImpl() {
     fprintf(stderr, "Process %d exits with %d\n", currPID, status);
 
     //Set the exist status in the PCB of this process 
+    currentThread->space->getPCB()->status = status;  
     
     //Also let other processes  know this process  exits.
+    processManager->broadcast(currPID);
 
     //Clean up the space of this process
     delete currentThread->space;
@@ -262,6 +264,7 @@ void exitImpl() {
     processManager->clearPID(currPID);
     
     //Terminate the current Nacho thread
+    currentThread->Finish();
 
 }
 
@@ -276,13 +279,13 @@ int joinImpl() {
    //Change the process state in its PCB as P_BLOCKED
     currentThread->space->getPCB()->status = P_BLOCKED;
         
-   // Use proessManager to join otherPID 
-   	// Implement me
-
-
-
-   //Change the process state in its PCB as P_RUNNING
-   	// Implement me
+    // Use proessManager to join otherPID 
+    // Implement me
+    processManager->join(otherPID);
+   
+    //Change the process state in its PCB as P_RUNNING
+    // Implement me
+    currentThread->space->getPCB()->status = P_RUNNING;
     
     return processManager->getStatus(otherPID);
 }
@@ -334,7 +337,7 @@ SpaceId execImpl(char* filename) {
     // Close file and execute new process
     delete fileToExecute;
     fprintf(stderr, "Exec Program: %d loading %s\n", currPID, filename);
-    newThread->Fork(execHelper, NULL);
+    newThread->Fork(execHelper, 0);
     currentThread->Yield();
     return newPID;
 }
@@ -413,7 +416,7 @@ char* copyString(char* oldStr) {
 int openImpl(char* filename) {
     
     int index = 0;
-    SysOpenFile* currSysFile = openFileManager->getOpenFile(index);
+    SysOpenFile* currSysFile = openFileManager->getFile(index);
 
     if (currSysFile == NULL) { // if no process currently has it open
         OpenFile* openFile = fileSystem->Open(filename);
@@ -428,7 +431,7 @@ int openImpl(char* filename) {
        // Setup this SysOpenFile data structure
    	// Implement me
        
-        index = openFileManager->addOpenFile(currSysFile);
+        index = openFileManager->addFile(currSysFile);
     }
     else { // the file is already open by another process
         currSysFile->numProcessesAccessing++;

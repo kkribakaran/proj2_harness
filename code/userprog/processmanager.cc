@@ -100,10 +100,13 @@ void ProcessManager::join(int pid) {
    // Conditional waiting on when it becomes 0. When it bcomes 0, recycle pid.
    // Implement me. 
     processesWaitingOnPID[pid]++;
+    lockForOtherProcess->Acquire();
     while (processesWaitingOnPID[pid] > 0) {
-      conditionForOtherProcesses.wait(lockForOtherProcess);
+      conditionForOtherProcess->Wait(lockForOtherProcess);
     }
     clearPID(pid); 
+    conditionForOtherProcess->Signal(lockForOtherProcess);
+    lockForOtherProcess->Release();
 }
 
 //-----------------------------------------------------------------------------
@@ -116,12 +119,14 @@ void ProcessManager::broadcast(int pid) {
     Lock* lock = lockList[pid];
     Condition* condition = conditionList[pid];
     pcbStatuses[pid] = pcbList[pid]->status;
-
+    lock->Acquire(); 
     if (condition != NULL) { // something is waiting on this process
 	// Wake up others 
 	// Implement me
-      condition.broadcast(lock);
-    }
+      condition->Broadcast(lock);
+    } 
+    processesWaitingOnPID[pid]--;
+    lock->Release();
 }
 
 //-----------------------------------------------------------------------------
