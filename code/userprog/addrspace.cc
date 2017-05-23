@@ -175,13 +175,17 @@ AddrSpace::AddrSpace(const AddrSpace* other, PCB* pcb_) {
         }
         //
         memoryManager->lock->Release();
+        machineLock->Acquire();
   
+        for (i = 0; i < numPages; i++) {
+          int destAddr = pageTable[i].physicalPage * PageSize;
+          int srcAddr = otherPageTable[i].physicalPage * PageSize;
+          bcopy(&((machine->mainMemory)[srcAddr]), &((machine->mainMemory)[destAddr]), PageSize);
+        }
+
+        machineLock->Release();
 	//Copy page content of the other process to the new address space page by page
         //Implement me
-        if (other->numPages > 0) {
-            int size = other->numPages * PageSize;
-            CopyAddrSpace(size, other);
-        }
     }
     else {// Cannot fit into the current available memory
         memoryManager->lock->Release();
@@ -294,58 +298,11 @@ int AddrSpace::Translate(int virtualAddress) {
     return physicalAddress;
 }
 
-int AddrSpace::Translate(int virtualAddress, const AddrSpace* other) {
-
-    int pageTableIndex = virtualAddress / PageSize;
-    int offset = virtualAddress % PageSize;
-    int physicalAddress = 0;
-
-    if (virtualAddress < 0 || pageTableIndex > (int)other->numPages) {
-        physicalAddress = -1;
-    } else {
-        physicalAddress = 
-            other->pageTable[pageTableIndex].physicalPage * PageSize + offset;
-    }
-
-    return physicalAddress;
-}
-
 //----------------------------------------------------------------------
 // AddrSpace::ReadFile
 //     
 //     Loads the code and data segments into the translated memory.
 //----------------------------------------------------------------------
-int AddrSpace::CopyAddrSpace(int size, const AddrSpace* other) {
-    int numBytesRead = 0;
-    int physToAddr = 0;
-    int physFromAddr = 0;
-    int currVirtFromAddr = 0;
-    int currVirtToAddr = 0;
-
-    while (numBytesRead < size) {
-
-        physToAddr = Translate(currVirtToAddr);
-        physFromAddr = Translate(currVirtFromAddr, other); 
-
-        if (physToAddr != -1 && physFromAddr != -1) { // zero the dest bytes, then copy over
-            
-            machineLock->Acquire();
-            bzero(&(machine->mainMemory)[physToAddr], PageSize);
-            bcopy(&((machine->mainMemory)[physFromAddr]), &((machine->mainMemory)[physToAddr]),
-                PageSize);
-            machineLock->Release();
-
-            currVirtFromAddr += PageSize;
-            currVirtToAddr += PageSize;
-
-            numBytesRead += PageSize;
-        } 
-        else {
-            return -1;
-        }
-    }
-    return 0;
-}
 
 int AddrSpace::ReadFile(int virtAddr, OpenFile* file, int size, int fileAddr) {
 

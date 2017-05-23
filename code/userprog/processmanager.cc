@@ -119,6 +119,7 @@ void ProcessManager::broadcast(int pid) {
     Lock* lock = lockList[pid];
     Condition* condition = conditionList[pid];
     pcbStatuses[pid] = pcbList[pid]->status;
+    if (lock == NULL) return;
     lock->Acquire(); 
     if (condition != NULL) { // something is waiting on this process
 	// Wake up others 

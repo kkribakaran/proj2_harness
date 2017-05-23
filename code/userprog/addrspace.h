@@ -28,7 +28,6 @@ class AddrSpace {
     ~AddrSpace();			// De-allocate an address space
 
     int Translate(int virtualAddress);  // Translates a virtual to physical addr
-    int Translate(int virtualAddress, const AddrSpace* other);
     int ReadFile(int virtAddr, OpenFile* file, int size, int fileAddr);
     int getNumPages() {return numPages;} // returns the number of pages held
 
