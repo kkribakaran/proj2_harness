@@ -422,7 +422,7 @@ char* copyString(char* oldStr) {
 int openImpl(char* filename) {
     
     int index = 0;
-    SysOpenFile* currSysFile = openFileManager->getFile(index);
+    SysOpenFile* currSysFile = openFileManager->getFile(filename, index);
 
     if (currSysFile == NULL) { // if no process currently has it open
         OpenFile* openFile = fileSystem->Open(filename);
@@ -441,7 +441,7 @@ int openImpl(char* filename) {
         currSysFile.numProcessesAccessing = 1;
 
         index = openFileManager->addFile(currSysFile);
-        currSysFile.fileID = index;
+        //currSysFile.fileID = index;
     }
     else { // the file is already open by another process
         currSysFile->numProcessesAccessing++;
@@ -567,7 +567,9 @@ int readImpl() {
 	//Use ReadAt() to read the file at selected offset to this system buffer buffer[]
 	// Adust the offset in userFile to reflect my current position.
 	// Implement me
+	bzero(buffer, size);
 	SysOpenFile* sysFile = openFileManager->getFile(userFile->indexInSysOpenFileList);
+        //fprintf(stderr, "\n%s, %d, %d\n", buffer, size, userFile->currOffsetInFile);
         int numRead = sysFile->file->ReadAt(buffer, size, userFile->currOffsetInFile);
         userFile->currOffsetInFile += numRead;
         
@@ -594,6 +596,7 @@ void closeImpl() {
     // Close and removethe file  in the open file list of this process PCB.
     // Implement me
     UserOpenFile* userFile = currentThread->space->getPCB()->getFile(fileID);
+    //userFile->currOffsetInFile = 0; 
     SysOpenFile* sysFile = openFileManager->getFile(userFile->indexInSysOpenFileList);
 
     sysFile->closedBySingleProcess();
