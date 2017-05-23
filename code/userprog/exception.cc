@@ -183,7 +183,7 @@ int forkImpl() {
    // Implement me
     AddrSpace* asCopy = new AddrSpace(currentThread->space, currentThread->space->getPCB());
     childThread->space = asCopy;
-    
+    currentThread->SaveUserState(); 
     
 
     // Mandatory printout of the forked process
@@ -228,12 +228,16 @@ void copyStateBack(int forkPC) {
 //----------------------------------------------------------------------
 
 void yieldImpl() {
-
-    
     //Save the corresponding user process's register states.
     //This kernel thread yields
+    currentThread->SaveUserState();
+    currentThread->Yield();    
+
     //Now this process is resumed for exectuion after yielding.
+    //??
+
     //Restore the corresponding user process's states (both registers and page table)
+    currentThread->RestoreUserState();
     
    // Implement me
    
